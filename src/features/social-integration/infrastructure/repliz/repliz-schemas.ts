@@ -138,7 +138,7 @@ export const replizChatMessageSchema = z
         text: z.string().optional(),
         attachment: z.any().optional(),
         button: z.any().optional(),
-        sendAt: z.string(),
+        sendAt: z.string().optional(),
         fromSenderAt: z.string().optional(),
     })
     .passthrough();

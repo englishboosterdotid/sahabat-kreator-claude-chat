@@ -1,18 +1,19 @@
 "use client";
 
-import { Sidebar } from "./sidebar/sidebar";
-import { MobileBottomNav } from "./mobile-bottom-nav";
 import Image from "next/image";
 import { Menu } from "lucide-react";
-import { useState, useEffect } from "react";
+import { cn } from "@/shared/lib/utils";
 import { ThemeToggle } from "@/shared/presentation/components/ui/theme-toggle";
+import { NotificationBell } from "./notification-bell";
+import { UserMenu } from "./user-menu";
 import {
   Sheet,
   SheetContent,
   SheetTrigger,
 } from "@/shared/presentation/components/ui/sheet";
-import { NotificationBell } from "./topbar/notification-bell";
-import { UserMenu } from "./topbar/user-menu";
+import { Sidebar } from "./sidebar/sidebar";
+import { MobileBottomNav } from "./mobile-bottom-nav";
+import { useState, useEffect } from "react";
 
 type Team = {
   id: string;
@@ -49,6 +50,7 @@ export function DashboardShell({
 
   return (
     <div className="relative flex min-h-screen bg-background">
+      {/* Background ambient gradients */}
       <div className="pointer-events-none fixed inset-0 -z-10 overflow-hidden">
         <div className="absolute -right-[10%] -top-[10%] h-[40%] w-[40%] rounded-full bg-primary/5 blur-[120px]" />
         <div className="absolute -bottom-[10%] -left-[5%] h-[30%] w-[30%] rounded-full bg-secondary/5 blur-[100px]" />
@@ -65,14 +67,21 @@ export function DashboardShell({
       </div>
 
       <div className="flex min-w-0 flex-1 flex-col">
-        {/* Topbar - desktop and mobile */}
-        <header className="sticky top-0 z-50 flex h-16 shrink-0 items-center justify-between border-b border-border bg-card/95 backdrop-blur-xl shadow-sm md:justify-end lg:px-8 px-4">
+        {/* ─── Sticky Header ─── */}
+        <header className={cn(
+          "sticky top-0 z-50 flex h-16 items-center justify-between border-b border-border bg-card/95 backdrop-blur-xl shadow-sm transition-colors",
+          // Mobile: full width with hamburger
+          "md:justify-end",
+        )}>
           {/* Mobile header content */}
-          <div className="flex items-center gap-3 md:hidden">
+          <div className="flex items-center gap-3 px-4 md:hidden">
             <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
               <SheetTrigger asChild>
-                <button className="rounded-lg p-2 hover:bg-accent">
-                  <Menu className="size-5" />
+                <button
+                  className="rounded-lg p-2 transition-colors hover:bg-accent"
+                  aria-label="Menu"
+                >
+                  <Menu className="size-5 text-muted-foreground" />
                 </button>
               </SheetTrigger>
               <SheetContent side="left" className="w-[280px] p-0">
@@ -96,19 +105,30 @@ export function DashboardShell({
           </div>
 
           {/* Desktop topbar content */}
-          <div className="flex items-center gap-2">
-            <ThemeToggle />
+          <div className="flex items-center gap-1 pr-4">
+            {/* Theme toggle */}
+            <div className="hidden md:block">
+              <ThemeToggle />
+            </div>
+
+            {/* Notification bell */}
             <NotificationBell />
+
+            {/* User avatar with dropdown */}
             <UserMenu name={user.name} email={user.email} />
           </div>
         </header>
 
-        <main className="flex-1 min-w-0 px-4 pb-20 pt-4 lg:px-8 lg:pt-8 md:pb-8">
+        {/* Main content */}
+        <main className="min-w-0 flex-1 bg-background px-4 pb-20 pt-4 md:pb-8 lg:px-8 lg:pt-8">
           {children}
         </main>
-      </div>
 
-      <MobileBottomNav basePath={basePath} />
+        {/* Mobile bottom nav - only show on mobile */}
+        <div className="md:hidden">
+          <MobileBottomNav basePath={basePath} />
+        </div>
+      </div>
     </div>
   );
 }

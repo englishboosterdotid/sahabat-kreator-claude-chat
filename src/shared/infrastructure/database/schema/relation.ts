@@ -12,6 +12,7 @@ import { contentStatistic } from "./content-statistic-schema";
 import { replizConnection } from "./repliz-connection-schema";
 import { knowledgeEntry } from "./knowledge-base-schema";
 import { workspaceMomentumPreference } from "./workspace-momentum-preference-schema";
+import { aiTopUpInvoice } from "./ai-topup-invoice-schema";
 
 export const workspaceMemberRoleRelations = relations(
   workspaceMemberRole,
@@ -135,3 +136,14 @@ export const replizConnectionRelations = relations(
     }),
   })
 );
+
+export const aiTopUpInvoiceRelations = relations(aiTopUpInvoice, ({ one }) => ({
+  team: one(team, {
+    fields: [aiTopUpInvoice.workspaceId],
+    references: [team.id],
+  }),
+  requester: one(user, {
+    fields: [aiTopUpInvoice.requestedByUserId],
+    references: [user.id],
+  }),
+}));

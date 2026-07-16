@@ -11,10 +11,14 @@ export const getConnectedAccountsAction = withWorkspacePermission(
     async (ctx) => {
         const connections = await db
             .select({
+                id: replizConnection.id,
                 replizAccountId: replizConnection.replizAccountId,
                 platform: replizConnection.platform,
                 teamId: replizConnection.teamId,
                 externalName: replizConnection.externalName,
+                externalUsername: replizConnection.externalUsername,
+                externalPicture: replizConnection.externalPicture,
+                isConnected: replizConnection.isConnected,
             })
             .from(replizConnection)
             .where(
@@ -31,8 +35,12 @@ export const getConnectedAccountsAction = withWorkspacePermission(
 );
 
 export type ConnectionMeta = {
+    id: string;
     replizAccountId: string;
     platform: string;
     teamId: string;
     externalName: string;
+    externalUsername: string | null;
+    externalPicture: string | null;
+    isConnected: boolean;
 };

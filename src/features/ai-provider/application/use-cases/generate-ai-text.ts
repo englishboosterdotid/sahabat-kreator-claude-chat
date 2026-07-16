@@ -8,6 +8,13 @@ import { calculateSumopodCostMicroUsd } from "../../infrastructure/adapters/sumo
 import { nanoid } from "nanoid";
 import type { GenerateTextInput } from "../../domain/repositories/ai-provider-adapter";
 
+/**
+ * Low-balance threshold. When balance drops below this, we either throw a
+ * helpful error or auto-fall back to a workspace's own API key if they have
+ * one configured. In micro-USD (e.g. 100_000 = $0.10).
+ */
+const LOW_BALANCE_THRESHOLD_MICRO_USD = 1_000;
+
 export async function generateAiText(
   workspaceId: string,
   input: GenerateTextInput,
@@ -17,7 +24,7 @@ export async function generateAiText(
     where: eq(aiProviderConfig.workspaceId, workspaceId),
   });
 
-  const effectiveConfig = config ?? {
+  let effectiveConfig = config ?? {
     providerType: "platform_sumopod" as const,
     apiKeyEncrypted: null,
     customBaseUrl: null,
@@ -26,13 +33,28 @@ export async function generateAiText(
 
   const model = effectiveConfig.model ?? "gpt-4o-mini";
 
-  // Cek saldo dulu sebelum generate, kalau pakai token platform
+  // BYOK fallback: kalau platform saldo habis / di bawah threshold tapi user
+  // pernah menyimpan API key sendiri, otomatis switch ke BYOK tanpa error.
   if (effectiveConfig.providerType === "platform_sumopod") {
     const balance = await db.query.aiTokenBalance.findFirst({
       where: eq(aiTokenBalance.workspaceId, workspaceId),
     });
-    if (!balance || balance.balance <= 0) {
-      throw new Error("Saldo token platform habis. Silakan top up atau gunakan API key sendiri.");
+    const balanceMicro = balance?.balance ?? 0;
+
+    if (balanceMicro <= LOW_BALANCE_THRESHOLD_MICRO_USD) {
+      // Auto-fall-back ke BYOK kalau ada API key sendiri
+      if (config?.apiKeyEncrypted) {
+        effectiveConfig = {
+          ...config,
+          providerType: config.providerType === "platform_sumopod"
+            ? "anthropic" // default ke anthropic karena ini platform kurator
+            : config.providerType,
+        };
+      } else {
+        throw new Error(
+          "Saldo token platform habis. Silakan top up atau gunakan API key sendiri."
+        );
+      }
     }
   }
 
@@ -40,6 +62,7 @@ export async function generateAiText(
   const result = await adapter.generateText(input);
 
   let costMicroUsd = 0;
+  // Hanya charge saldo kalau akhirnya pakai platform_sumopod (BYOK = pakai user sendiri)
   if (effectiveConfig.providerType === "platform_sumopod") {
     costMicroUsd = calculateSumopodCostMicroUsd(model, result.inputTokens, result.outputTokens);
   }

@@ -1,6 +1,7 @@
 export * from "./ai-provider-config-schema";
 export * from "./ai-token-balance-schema";
 export * from "./ai-usage-log-schema";
+export * from "./ai-topup-invoice-schema";
 
 export * from "./auth-schema";
 export * from "./workspace-schema";

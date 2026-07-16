@@ -7,6 +7,7 @@ import { generateSlug } from "@/shared/lib/utils";
 import { team } from "@/shared/infrastructure/database/schema/auth-schema";
 import { eq, and, ne } from "drizzle-orm";
 import { organization } from "@/shared/infrastructure/database/schema";
+import { seedInitialBalance } from "@/features/ai-provider/infrastructure/balance/seed-initial-balance";
 
 /**
  * Create a new organization with a default team.
@@ -58,6 +59,9 @@ export async function createOrganizationAction(name: string) {
         .update(team)
         .set({ slug: orgSlug })
         .where(eq(team.id, defaultTeam.id));
+
+      // Seed initial AI token balance ($0.50) for the default workspace.
+      await seedInitialBalance(defaultTeam.id);
     }
 
     return {
@@ -116,6 +120,9 @@ export async function createTeamAction(organizationId: string, name: string) {
     const persisted = await db.query.team.findFirst({
       where: eq(team.id, result.id),
     });
+
+    // Seed initial balance ($0.50) for the new workspace (idempotent — no-op if already seeded).
+    await seedInitialBalance(result.id);
 
     return {
       success: true as const,

@@ -167,9 +167,11 @@ export function InboxPage() {
                                             {msg.type === "image" && msg.attachment && (
                                                 <p className="text-xs opacity-70">[Foto]</p>
                                             )}
-                                            <p className="text-xs mt-1 opacity-60 text-right">
-                                                {new Date(msg.sendAt).toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" })}
-                                            </p>
+                                            {msg.sendAt && (
+                                                <p className="text-xs mt-1 opacity-60 text-right">
+                                                    {new Date(msg.sendAt).toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" })}
+                                                </p>
+                                            )}
                                         </div>
                                     </div>
                                 ))

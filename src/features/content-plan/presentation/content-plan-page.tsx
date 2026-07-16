@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useSuspenseQueries } from "@tanstack/react-query";
+import { useQueries } from "@tanstack/react-query";
 import { WeekNavigator } from "./components/week-navigator";
 import { UnscheduledDraftList } from "./components/unscheduled-draft-list";
 import { ScheduledDayGroup } from "./components/scheduled-day-group";
@@ -31,7 +31,7 @@ export function ContentPlanPage() {
     const fromIso = start.toISOString();
     const toIso = end.toISOString();
 
-    const [draftsQuery, scheduledQuery] = useSuspenseQueries({
+    const [draftsQuery, scheduledQuery] = useQueries({
         queries: [
             unscheduledDraftsOptions(),
             scheduledContentOptions(fromIso, toIso),
@@ -40,43 +40,48 @@ export function ContentPlanPage() {
 
     const drafts = (Array.isArray(draftsQuery.data) ? draftsQuery.data : []) as Draft[];
     const scheduled = (Array.isArray(scheduledQuery.data) ? scheduledQuery.data : []) as ScheduledItem[];
-
+    const isLoading = draftsQuery.isLoading || scheduledQuery.isLoading;
     const grouped = groupByDay(scheduled);
 
     return (
         <div className="space-y-6">
             <WeekNavigator
-                start={start} end={end}
+                start={start}
+                end={end}
                 onPrev={() => setReferenceDate(new Date(start.getTime() - 7 * 86400000))}
                 onNext={() => setReferenceDate(new Date(start.getTime() + 7 * 86400000))}
                 onToday={() => setReferenceDate(new Date())}
             />
 
-            <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-                <div className="space-y-4 lg:col-span-2">
-                    {Object.keys(grouped).length === 0 ? (
-                        <p className="text-sm text-muted-foreground">Belum ada konten terjadwal minggu ini.</p>
-                    ) : (
-                        Object.entries(grouped)
-                            .sort(([a], [b]) => a.localeCompare(b))
-                            .map(([date, items]) => (
-                                <ScheduledDayGroup
-                                    key={date}
-                                    date={date}
-                                    items={items as ScheduledItem[]}
-                                />
-                            ))
-                    )}
-                </div>
+            {isLoading ? (
+                <p className="text-sm text-muted-foreground">Memuat content plan...</p>
+            ) : (
+                <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+                    <div className="space-y-4 lg:col-span-2">
+                        {Object.keys(grouped).length === 0 ? (
+                            <p className="text-sm text-muted-foreground">Belum ada konten terjadwal minggu ini.</p>
+                        ) : (
+                            Object.entries(grouped)
+                                .sort(([a], [b]) => a.localeCompare(b))
+                                .map(([date, items]) => (
+                                    <ScheduledDayGroup
+                                        key={date}
+                                        date={date}
+                                        items={items as ScheduledItem[]}
+                                    />
+                                ))
+                        )}
+                    </div>
 
-                <div className="space-y-3">
-                    <h2 className="text-sm font-medium">Draft Belum Terjadwal</h2>
-                    <UnscheduledDraftList
-                        drafts={drafts}
-                        onSchedule={(draft) => setSelectedDraft(draft)}
-                    />
+                    <div className="space-y-3">
+                        <h2 className="text-sm font-medium">Draft Belum Terjadwal</h2>
+                        <UnscheduledDraftList
+                            drafts={drafts}
+                            onSchedule={(draft) => setSelectedDraft(draft)}
+                        />
+                    </div>
                 </div>
-            </div>
+            )}
 
             {selectedDraft && (
                 <ScheduleFormModal

@@ -34,7 +34,7 @@ export function ConnectedAccountRow({
   workspaceSlug,
 }: Props) {
   const router = useRouter();
-const [open, setOpen] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
   const [loading, setLoading] = useState(false);
 
   async function reconnect() {
@@ -55,28 +55,20 @@ const [open, setOpen] = useState(false);
   }
 
   async function remove() {
-  try {
-    setLoading(true);
+    try {
+      setLoading(true);
 
-    await removeConnectionAction({
-      connectionId: connection.id,
-      replizAccountId: connection.replizAccountId,
-    });
+      await removeConnectionAction({
+        connectionId: connection.id,
+        replizAccountId: connection.replizAccountId,
+      });
 
-    router.refresh();
-  } finally {
-    setLoading(false);
-    setOpen(false);
+      router.refresh();
+    } finally {
+      setLoading(false);
+      setConfirmOpen(false);
+    }
   }
-}
-  
-  <DisconnectAccountDialog
-    open={open}
-    onOpenChange={setOpen}
-    account={connection.externalName}
-    loading={loading}
-    onConfirm={remove}
-/>
 
   return (
     <div className="flex items-center gap-4 rounded-xl border border-border bg-card p-4 transition-all hover:shadow-sm">
@@ -125,11 +117,19 @@ const [open, setOpen] = useState(false);
           size="icon"
           variant="ghost"
           isLoading={loading}
-          onClick={() => setOpen(true)}
+          onClick={() => setConfirmOpen(true)}
         >
           <Trash2 className="size-4" />
         </Button>
       </div>
+
+      <DisconnectAccountDialog
+        open={confirmOpen}
+        onOpenChange={setConfirmOpen}
+        account={connection.externalName}
+        loading={loading}
+        onConfirm={remove}
+      />
     </div>
   );
 }

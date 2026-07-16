@@ -6,12 +6,13 @@ import {
 
 import { AddAccountButton } from "../components/add-account-button";
 import { ConnectedAccountRow } from "../rows/connected-account-row";
+import type { ConnectionMeta } from "../../application/use-cases/get-connected-accounts";
 
 type Props = {
   platform: string;
   orgSlug: string;
   workspaceSlug: string;
-  connections: any[];
+  connections: ConnectionMeta[];
 };
 
 export function PlatformBlock({
