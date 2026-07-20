@@ -55,7 +55,7 @@ export function RegisterForm() {
 
     const workspace = await getFirstWorkspaceAction();
     if (workspace) {
-      router.push(`/${workspace.orgSlug}/${workspace.workspaceSlug}`);
+      setTimeout(() => router.replace(`/${workspace.orgSlug}/${workspace.workspaceSlug}`), 0);
       return;
     }
 
@@ -65,13 +65,13 @@ export function RegisterForm() {
       await new Promise((r) => setTimeout(r, 200));
       const retry = await getFirstWorkspaceAction();
       if (retry) {
-        router.push(`/${retry.orgSlug}/${retry.workspaceSlug}`);
+        setTimeout(() => router.replace(`/${retry.orgSlug}/${retry.workspaceSlug}`), 0);
         return;
       }
     }
 
     // Final fallback — stay on page and let the user navigate
-    router.push("/");
+    setTimeout(() => router.replace("/"), 0);
   }
 
   return (

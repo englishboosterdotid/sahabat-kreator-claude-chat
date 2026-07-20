@@ -65,7 +65,9 @@ export function OrganizationSwitcher({
                     key={org.id}
                     onSelect={() => {
                       if (org.slug !== currentOrgSlug) {
-                        onSelect(org.id, org.slug);
+                        // Defer to let Radix dropdown menu cleanup complete
+                        // before onSelect fires, avoiding "state update on unmounted component"
+                        setTimeout(() => onSelect(org.id, org.slug), 0);
                       }
                     }}
                     className="group flex cursor-pointer select-none items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-colors data-[highlighted]:bg-accent"

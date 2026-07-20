@@ -54,13 +54,13 @@ export function LoginForm() {
     // Fetch the user's first workspace (no polling!)
     const workspace = await getFirstWorkspaceAction();
     if (workspace) {
-      router.push(`/${workspace.orgSlug}/${workspace.workspaceSlug}`);
+      setTimeout(() => router.replace(`/${workspace.orgSlug}/${workspace.workspaceSlug}`), 0);
       return;
     }
 
     // No workspace yet — user should be on /register
     // (this should never happen for login, but handle it gracefully)
-    router.push("/");
+    setTimeout(() => router.replace("/"), 0);
   }
 
   return (

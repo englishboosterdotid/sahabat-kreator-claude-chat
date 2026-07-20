@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, useRef } from "react";
 
 import {
   authClient,
@@ -37,19 +37,28 @@ export function SidebarHeader({
   if (collapsed) return null;
 
   async function handleOrgSelect(orgId: string, newOrgSlug: string) {
-    await authClient.organization.setActive({ organizationId: orgId });
+    try {
+      await authClient.organization.setActive({ organizationId: orgId });
+    } catch {
+      // Even if setActive fails, do a hard reload so the new orgSlug is picked up.
+      window.location.href = `/${newOrgSlug}`;
+      return;
+    }
 
     const teamsResult = await authClient.organization.listTeams({
       query: { organizationId: orgId },
     });
     const firstTeam = teamsResult.data?.[0];
 
-    if (firstTeam?.slug) {
-      router.push(`/${newOrgSlug}/${firstTeam.slug}`);
-    } else {
-      // No workspace yet — bounce to home; user can create one from sidebar.
-      router.push("/");
-    }
+    // Defer navigation so Radix dropdown's internal cleanup completes
+    // before we unmount the component (fixes "state update on unmounted component").
+    setTimeout(() => {
+      if (firstTeam?.slug) {
+        window.location.href = `/${newOrgSlug}/${firstTeam.slug}`;
+      } else {
+        window.location.href = "/";
+      }
+    }, 0);
   }
 
   const activeOrgId = activeOrg?.id;
@@ -57,16 +66,19 @@ export function SidebarHeader({
   function handleOrgCreated(orgId: string, orgSlug: string, firstTeamSlug: string) {
     // 1) Set active org (server-side session cookie updated)
     // 2) Notify $listOrg atom → useListOrganizations() refetches
-    // 3) router.refresh → re-render server components (teams list)
-    // 4) Navigate to org's default workspace
+    // 3) Defer navigation so Radix dropdown cleanup completes before unmounting
     authClient.organization
       .setActive({ organizationId: orgId })
       .then(() => {
         authClient.$store.notify("$listOrg");
-        window.location.href = `/${orgSlug}/${firstTeamSlug}`;
+        setTimeout(() => {
+          window.location.href = `/${orgSlug}/${firstTeamSlug}`;
+        }, 0);
       })
       .catch(() => {
-        window.location.href = `/${orgSlug}/${firstTeamSlug}`;
+        setTimeout(() => {
+          window.location.href = `/${orgSlug}/${firstTeamSlug}`;
+        }, 0);
       });
   }
 

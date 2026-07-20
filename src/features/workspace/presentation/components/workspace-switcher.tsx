@@ -31,9 +31,12 @@ export function WorkspaceSwitcher({
       seg === currentWorkspaceSlug ? slug : seg
     );
     const newPath = "/" + newSegments.join("/");
+    // Defer navigation to let Radix dropdown menu cleanup complete
     // Hard navigation so layout.tsx re-runs server-side and refreshes
     // BetterAuth session cookies (mirrors OrganizationSwitcher pattern).
-    window.location.href = newPath;
+    setTimeout(() => {
+      window.location.href = newPath;
+    }, 0);
   };
 
   return (

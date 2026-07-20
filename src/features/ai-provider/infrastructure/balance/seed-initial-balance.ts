@@ -10,7 +10,8 @@ import { nanoid } from "nanoid";
  * Idempotent: kalau workspace sudah punya saldo (mis. pernah top-up manual),
  * tidak ditimpa. Cek via upsert + `WHERE NOT EXISTS`.
  */
-export const INITIAL_BONUS_MICRO_USD = 500_000;
+// export const INITIAL_BONUS_MICRO_USD = 500_000;
+export const INITIAL_BONUS_MICRO_USD = 50_000;
 
 export async function seedInitialBalance(workspaceId: string): Promise<void> {
   // Upsert dengan onConflictDoNothing — kalau baris sudah ada, lewati.
